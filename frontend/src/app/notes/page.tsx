@@ -7,22 +7,50 @@ const Notes = () => {
 
     interface Note {
         id: number;
+        user_id: string;
         title: string;
         body: string;
     }
-    
+
     const [notes, setNotes] = useState<Note[]>([]); 
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newNote, setNewNote] = useState({ title: '', body: '' });
+    const [userId, setUserId] = useState<string | null>(null);
 
-    const fetchNotes = async () => {
+    const getUserIdFromToken = async () => {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            console.error('Access token not found');
+            return null;
+        }
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/user', {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: 'application/json',
+                },
+            });
+            if (!response.ok) {
+                console.error('Failed to fetch user data');
+                return null;
+            }
+            const userData = await response.json();
+            console.log(userData.id)
+            return userData.id; // Asumsi id ada dalam response API
+        } catch (error) {
+            console.error('Failed to get user id:', error);
+            return null;
+        }
+    };
+
+    const fetchNotes = async (currentUserId: string | null) => {
         const token = localStorage.getItem('access_token');
         if (!token) {
             console.error('Access token not found');
             return;
         }
-
         try {
             const response = await fetch('http://127.0.0.1:8000/api/posts', {
                 method: 'GET',
@@ -31,8 +59,17 @@ const Notes = () => {
                     Accept: 'application/json',
                 },
             });
-            const data = await response.json();
-            setNotes(data);
+            console.log("Response status:", response.status);
+    
+            if (!response.ok) {
+                console.error('Failed to fetch notes');
+                return;
+            }
+    
+            const data: Note[] = await response.json();
+    
+            const filteredNotes = data.filter(note => note.user_id === currentUserId);
+            setNotes(filteredNotes);
             setIsLoading(false);
         } catch (error) {
             console.error('Error fetching notes:', error);
@@ -61,7 +98,7 @@ const Notes = () => {
             if (response.ok) {
                 setNewNote({ title: '', body: '' }); // Clear the form
                 setIsModalOpen(false); // Close the modal
-                fetchNotes(); // Refresh the notes list
+                fetchNotes(userId); // Refresh the notes list
             } else {
                 console.error('Failed to add note');
             }
@@ -70,8 +107,42 @@ const Notes = () => {
         }
     };
 
+    const deleteNote = async (id: number) => {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            console.error('Access token not found');
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/api/posts/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                // Remove the deleted note from the state
+                setNotes(notes.filter(note => note.id !== id));
+            } else {
+                console.error('Failed to delete note');
+            }
+        } catch (error) {
+            console.error('Error deleting note:', error);
+        }
+    };
+
     useEffect(() => {
-        fetchNotes();
+        const initialize = async () => {
+            const id = await getUserIdFromToken();
+            //console.log(id)
+            setUserId(id);
+            fetchNotes(id)
+        };
+        initialize();
     }, []);
 
     return (
@@ -101,10 +172,17 @@ const Notes = () => {
                                 key={note.id}
                                 className="bg-white shadow-lg rounded-lg p-6 max-w-full"
                             >
+                                <button
+                                    onClick={() => deleteNote(note.id)}
+                                    className="top-2 right-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+                                >
+                                    Delete
+                                </button>
                                 <h2 className="text-xl font-bold text-center mb-4 text-black">
                                     {note.title}
                                 </h2>
                                 <p className="text-gray-700 text-center">{note.body}</p>
+                                
                             </div>
                         ))}
                     </div>

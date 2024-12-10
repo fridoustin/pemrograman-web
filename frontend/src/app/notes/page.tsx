@@ -169,21 +169,20 @@ const Notes = () => {
                     <div className="grid grid-cols-1 gap-6">
                         {notes.map((note) => (
                             <div
-                                key={note.id}
-                                className="bg-white shadow-lg rounded-lg p-6 max-w-full"
+                            key={note.id}
+                            className="bg-white shadow-md rounded-xl p-4 border border-gray-200 relative max-w-full"
+                        >
+                            <button
+                                onClick={() => deleteNote(note.id)}
+                                className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 text-sm rounded-lg hover:bg-red-600"
                             >
-                                <button
-                                    onClick={() => deleteNote(note.id)}
-                                    className="top-2 right-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
-                                >
-                                    Delete
-                                </button>
-                                <h2 className="text-xl font-bold text-center mb-4 text-black">
-                                    {note.title}
-                                </h2>
-                                <p className="text-gray-700 text-center">{note.body}</p>
-                                
-                            </div>
+                                delete
+                            </button>
+                            <h2 className="text-xl font-extrabold text-black mb-2">{note.title}</h2>
+                            <p className="text-gray-700 break-words whitespace-pre-wrap">
+                                {note.body}
+                            </p>
+                        </div>                        
                         ))}
                     </div>
                 )}
@@ -208,16 +207,13 @@ const Notes = () => {
                         </label>
                         </div>
                         <div className="mb-4">
-
                             <p className='text-black font-medium pb-1 pt-4'>Body</p>
-                            <label className="input input-bordered flex items-center gap-2 bg-white">
-                                <input
-                                    value={newNote.body}
-                                    onChange={(e) => setNewNote({ ...newNote, body: e.target.value })}
-                                    className="grow text-black"
-                                    placeholder="Enter note body"
-                                ></input>
-                            </label>   
+                            <textarea
+                                value={newNote.body}
+                                onChange={(e) => setNewNote({ ...newNote, body: e.target.value })}
+                                className="w-full h-32 px-4 py-2 border rounded-lg text-black bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Enter note body"
+                            ></textarea> 
                         </div>
                         <div className="flex justify-end space-x-4">
                             <button

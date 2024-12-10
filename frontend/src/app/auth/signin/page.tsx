@@ -47,7 +47,7 @@ const SignIn = () => {
                     type: 'LOGIN',
                     payload: { token: data.token },
                 });
-                router.push('/'); // Navigasi hanya dilakukan jika kredensial benar
+                router.push('/notes'); // Navigasi hanya dilakukan jika kredensial benar
             } else {
                 // Tampilkan error jika login gagal
                 setError(data.message || 'Login gagal, silakan periksa kembali email dan password Anda');
